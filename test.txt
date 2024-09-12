@@ -6,7 +6,7 @@ st.set_page_config(layout="wide")
 # Load the CSV file
 @st.cache_data
 def load_data():
-    return pd.read_csv(r'C:\Users\vikra\OneDrive - Oklahoma A and M System\Desktop\Projects\Text_Project\bbc-news\payroll_acronyms.csv')
+    return pd.read_csv(r'C:\Users\vikra\OneDrive - Oklahoma A and M System\Desktop\Projects\Text_Project\bbc-news\acronyms.csv')
 
 # Load data
 data = load_data()
@@ -87,7 +87,7 @@ if st.sidebar.button('Add Acronym'):
         # Append to the data
         new_data = pd.DataFrame({'Acronym': [new_acronym], 'Meaning': [new_meaning], 'Description': [new_description]})
         data = pd.concat([data, new_data], ignore_index=True)
-        data.to_csv(r'C:\Users\vikra\OneDrive - Oklahoma A and M System\Desktop\Projects\Text_Project\bbc-news\payroll_acronyms.csv', index=False)  # Save updated data to CSV
+        data.to_csv(r'C:\Users\vikra\OneDrive - Oklahoma A and M System\Desktop\Projects\Text_Project\bbc-news\acronyms.csv', index=False)  # Save updated data to CSV
         st.success('New acronym added successfully!')
     else:
         st.error('Please fill all fields!')
