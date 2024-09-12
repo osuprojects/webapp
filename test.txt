@@ -1,0 +1,115 @@
+import streamlit as st
+import pandas as pd
+
+st.set_page_config(layout="wide")
+
+# Load the CSV file
+@st.cache_data
+def load_data():
+    return pd.read_csv(r'C:\Users\vikra\OneDrive - Oklahoma A and M System\Desktop\Projects\Text_Project\bbc-news\payroll_acronyms.csv')
+
+# Load data
+data = load_data()
+
+# Center the title using CSS and reduce space below it
+st.markdown(
+    """
+    <style>
+    .center-title {
+        text-align: center;
+        font-size: 2.5em;
+        margin-bottom: 5px; /* Reduce the space below the title */
+        margin-top: 0; /* Remove any extra space above the title */
+    }
+    </style>
+    <h1 class="center-title">Acronym Finder and Management</h1>
+    """,
+    unsafe_allow_html=True
+)
+
+# Center the content with CSS
+st.markdown(
+    """
+    <style>
+    .center-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    .tabs-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Center the search bar
+with st.container():
+    st.text_input('Search for an acronym', '', key='search', label_visibility="hidden", placeholder='Search for an acronym')
+
+search_term = st.session_state.search if 'search' in st.session_state else ''
+
+# Display centered content
+if search_term:
+    filtered_data = data[data['Acronym'].str.contains(search_term, case=False, na=False)]
+    st.write(filtered_data)
+else:
+    # Display Acronyms Alphabetically
+
+    # Get unique first letters and display centered tabs
+    unique_first_letters = sorted(set(data['Acronym'].str[0].str.upper().fillna('Other')))
+    
+    # Center the tabs
+    st.markdown('<div class="tabs-container">', unsafe_allow_html=True)
+    tabs = st.tabs(unique_first_letters)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    for letter in unique_first_letters:
+        with tabs[unique_first_letters.index(letter)]:
+            if letter == 'Other':
+                filtered_df = data[~data['Acronym'].str[0].str.isalpha()]
+            else:
+                filtered_df = data[data['Acronym'].str.startswith(letter, na=False)]
+            st.table(filtered_df)
+
+# Add New Acronym
+st.sidebar.header('Add New Acronym')
+new_acronym = st.sidebar.text_input('Acronym')
+new_meaning = st.sidebar.text_input('Meaning')
+new_description = st.sidebar.text_area('Description')
+
+if st.sidebar.button('Add Acronym'):
+    if new_acronym and new_meaning and new_description:
+        # Append to the data
+        new_data = pd.DataFrame({'Acronym': [new_acronym], 'Meaning': [new_meaning], 'Description': [new_description]})
+        data = pd.concat([data, new_data], ignore_index=True)
+        data.to_csv(r'C:\Users\vikra\OneDrive - Oklahoma A and M System\Desktop\Projects\Text_Project\bbc-news\payroll_acronyms.csv', index=False)  # Save updated data to CSV
+        st.success('New acronym added successfully!')
+    else:
+        st.error('Please fill all fields!')
+
+# Suggest Corrections
+st.sidebar.header('Suggest a Correction')
+suggested_acronym = st.sidebar.text_input('Acronym to Correct')
+suggested_correction = st.sidebar.text_area('Your Suggestion')
+
+if st.sidebar.button('Submit Suggestion'):
+    if suggested_acronym and suggested_correction:
+        with open('suggestions.txt', 'a') as f:
+            f.write(f'Acronym: {suggested_acronym}\nSuggestion: {suggested_correction}\n---\n')
+        st.success('Thank you for your suggestion!')
+    else:
+        st.error('Please provide both the acronym and the correction!')
+
+# Display Suggestions
+if st.checkbox('Show Suggestions'):
+    try:
+        with open('suggestions.txt', 'r') as f:
+            suggestions = f.read()
+        st.text_area('Suggestions', suggestions, height=200)
+    except FileNotFoundError:
+        st.write('No suggestions yet.')
